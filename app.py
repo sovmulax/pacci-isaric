@@ -615,7 +615,7 @@ def home_page():
                                     "Each question is based on a standardized schema, has specific definitions mapped to controlled terminologies, and has built-in quality control. ",
                                     "ARC is openly accessible, with version control via GitHub ensuring document integrity and collaboration."
                                 ], className="card-text"),
-                                html.A("Find Out More",  target="_blank",href="https://github.com/ISARICResearch/DataPlatform/tree/main/ARCH", style={'display': 'block', 'margin-top': '10px', 'color': '#BA0225'})
+                                html.A("Find Out More",  href="ARCH/", style={'display': 'block', 'margin-top': '10px', 'color': '#BA0225'})
                             ], className="card-tools-fixed")
                         ])
                     ], md=3),
@@ -1115,13 +1115,17 @@ def update_output(grouped_presets, selected_version_data,values,current_datadicc
             template_ulist_var=current_datadicc.loc[current_datadicc['Type'].isin(['user_list','multi_list'])]
             template_ulist_lists=template_ulist_var['List']
             print('esta es la version seleccionada',currentVersion)
-            root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+            # root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+            root='ARCH/'
             #for t_u_list in template_ulist_lists:
             for index_tem_ul,row_tem_ul in template_ulist_var.iterrows():
                 print(row_tem_ul['Variable'])
                 dict1_options=[]
                 dict2_options=[]
                 t_u_list = row_tem_ul['List']
+                if t_u_list is None or pd.isna(t_u_list):
+                    print(f"Warning: List value is None or NaN for variable {row_tem_ul['Variable']}")
+                    break
                 list_path = root+currentVersion+'/Lists/'+t_u_list.replace('_','/')+'.csv'
                 try:
                     list_options = pd.read_csv(list_path,encoding='latin1') 
@@ -1178,13 +1182,16 @@ def update_output(grouped_presets, selected_version_data,values,current_datadicc
     else:
         template_ulist_var=current_datadicc.loc[current_datadicc['Type'].isin(['user_list','multi_list'])]
 
-        root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+        root='ARCH/'
         #for t_u_list in template_ulist_lists:
         for index_tem_ul,row_tem_ul in template_ulist_var.iterrows():
             print(row_tem_ul['Variable'])
             dict1_options=[]
             dict2_options=[]
             t_u_list = row_tem_ul['List']
+            if t_u_list is None or pd.isna(t_u_list):
+                print(f"Warning: List value is None or NaN for variable {row_tem_ul['Variable']}")
+                break
             list_path = root+currentVersion+'/Lists/'+t_u_list.replace('_','/')+'.csv'
             try:
                 list_options = pd.read_csv(list_path,encoding='latin1') 
@@ -1262,7 +1269,8 @@ def update_output(grouped_presets, selected_version_data,values,current_datadicc
     return tree_items,current_datadicc.to_json(date_format='iso', orient='split'),json.dumps(templa_answer_opt_dict1), json.dumps(templa_answer_opt_dict2)
 
 @app.callback(
-    [Output('modal', 'is_open', allow_duplicate=True), Output('current_datadicc-store','data'),Output('ulist_variable_choices-store','data'),
+    [Output('modal', 'is_open', allow_duplicate=True), Output('current_datadicc-store','data'),
+     Output('ulist_variable_choices-store','data'),
      Output('multilist_variable_choices-store','data'),
      Output('tree_items_container','children',allow_duplicate=True) ],
     [Input('modal_submit', 'n_clicks'), Input('modal_cancel', 'n_clicks'), Input('current_datadicc-store','data')], 
@@ -1362,7 +1370,7 @@ def on_modal_button_click(submit_n_clicks, cancel_n_clicks,current_datadicc_save
                     multiple=False,
                     checkable=True,
                     checked= current_datadicc['Variable'].loc[current_datadicc['Variable'].isin(checked)],
-                    expanded=current_datadicc['Variable'].loc[current_datadicc['Variable'].isin(checked)],
+                    expanded= current_datadicc['Variable'].loc[current_datadicc['Variable'].isin(checked)],
                     data=tree_items_data),id='tree_items_container',
                 style={
                     'overflow-y': 'auto',  # Vertical scrollbar when needed
@@ -1966,4 +1974,4 @@ def on_rq_modal_button_click(submit_n_clicks, cancel_n_clicks):
 
 if __name__ == "__main__":
     #app.run_server(debug=True)
-    app.run_server(debug=True, host='0.0.0.0', port='8080')#change for deploy
+    app.run_server(debug=True, host='0.0.0.0', port='8300')#change for deploy

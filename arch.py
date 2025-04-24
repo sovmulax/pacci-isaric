@@ -38,22 +38,17 @@ def getResearchQuestionTypes(datadicc):
 
 
 def getARCHVersions():
-
-    # GitHub API URL for the contents of the repository
-    repo_name = "ISARICResearch/DataPlatform"
-    path = "ARCH"
-    url = f"https://api.github.com/repos/{repo_name}/contents/{path}"
+    # Use local path instead of GitHub API
+    arch_dir = 'ARCH/'
     
-    # Make the request
-    response = requests.get(url)
-    folder_names = []
-    
-    # Check if the request was successful
-    if response.status_code == 200:
-        contents = response.json()
-        folder_names = [item['name'] for item in contents if item['type'] == 'dir']
-    else:
-        print("Failed to retrieve data:", response.status_code)
+    try:
+        # Get folder names by listing the ARCH directory
+        import os
+        folder_names = [name for name in os.listdir(arch_dir) 
+                       if os.path.isdir(os.path.join(arch_dir, name))]
+    except Exception as e:
+        print(f"Failed to read local directory: {e}")
+        folder_names = []
     
     versions = set(folder_names)
     
@@ -70,15 +65,19 @@ def getARCHVersions():
     
     # Filter out "-rc" versions to get the most recent non-rc version
     non_rc_versions = [v for v, suffix in parsed_versions if suffix == '']
-    most_recent_version = max(non_rc_versions)
-    most_recent_version_str = 'ARCH' + '.'.join(map(str, most_recent_version))
+    if non_rc_versions:
+        most_recent_version = max(non_rc_versions)
+        most_recent_version_str = 'ARCH' + '.'.join(map(str, most_recent_version))
+    else:
+        most_recent_version_str = next(iter(versions)) if versions else None
     
     # Include all versions back in the list
     all_versions = list(versions)
     
     # Reorganize to ensure the first is the most recent version and the second is the "-rc" version
-    all_versions.remove(most_recent_version_str)
-    all_versions.insert(0, most_recent_version_str)
+    if most_recent_version_str in all_versions:
+        all_versions.remove(most_recent_version_str)
+        all_versions.insert(0, most_recent_version_str)
     
     if rc_version_str in all_versions:
         all_versions.remove(rc_version_str)
@@ -98,7 +97,9 @@ def getARCH(version):
     #sv_selected=version
     #v_selected=sv_selected.split('.')[0].replace(' ','%20')
     #sv_selected=sv_selected.replace(' ','%20')
-    root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+    # Use relative path instead of absolute path
+    # root='/Users/evane.soumaila/Documents/GitHub/DataPlatform-1/BRIDGE/ARCH/'
+    root='ARCH/'
     datadicc_path = root+version+'/'+'ARCH.csv'
 
     try:
@@ -120,7 +121,7 @@ def getARCH(version):
 
         return datadicc,presets
     except Exception as e:
-        print(f"Failed to fetch remote file due to: {e}. Attempting to read from local file.")
+        print(f"Failed to fetch file due to: {e}. Attempting to read from local file.")
     
 
 def getDependencies(datadicc):
@@ -334,7 +335,8 @@ def getListContent(current_datadicc,version):
     #datadiccDisease_lists = current_datadicc.loc[(((current_datadicc['Type']=='list') |(current_datadicc['Type']=='user_list') )&
     #                                            (current_datadicc['Variable'].isin(selected_variables)))]     
     datadiccDisease_lists = current_datadicc.loc[current_datadicc['Type']=='list']         
-    root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+    # Use relative path instead of absolute path
+    root='ARCH/'
     
     list_variable_choices=[]
     for _, row in datadiccDisease_lists.iterrows():
@@ -346,8 +348,9 @@ def getListContent(current_datadicc,version):
             try:
                 list_options = pd.read_csv(list_path,encoding='latin1') 
             except Exception as e:
-                print(f"Failed to fetch remote file due to: {e}. Attempting to read from local file.")
+                print(f"Failed to fetch file due to: {e}. Attempting to read from another location.")
                 
+            # Rest of the function remains the same
             list_options=list_options.sort_values(by=list_options.columns[0],ascending=True)
             list_choises=''
             list_variable_choices_aux=[]
@@ -436,9 +439,9 @@ def getListContent(current_datadicc,version):
                                 other_row['Question']=arrows[n]+'Specify other ' + row['Question'].lower()+''
                         else:
                             if 'other' in row['Question'].lower():
-                                other_row['Question']=arrows[n]+'Specify ' + row['Question']
+                                other_row['Question']=arrows[n]+'Specify ' + row['Question']+''
                             else:
-                                other_row['Question']=arrows[n]+'Specify other ' + row['Question']
+                                other_row['Question']=arrows[n]+'Specify other ' + row['Question']+''
                     else:
                         if row['Question'] !='NSAIDs':
                             if 'other' in row['Question'].lower():
@@ -527,7 +530,9 @@ def getUserListContent(current_datadicc,version,mod_list,user_checked_options=No
     #datadiccDisease_lists = current_datadicc.loc[(((current_datadicc['Type']=='list') |(current_datadicc['Type']=='user_list') )&
     #                                            (current_datadicc['Variable'].isin(selected_variables)))]     
     datadiccDisease_lists = current_datadicc.loc[current_datadicc['Type']=='user_list']         
-    root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+    # Use relative path instead of absolute path
+    # root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+    root='ARCH/'
     
     ulist_variable_choices=[]
     for _, row in datadiccDisease_lists.iterrows():
@@ -540,7 +545,7 @@ def getUserListContent(current_datadicc,version,mod_list,user_checked_options=No
                 list_options = pd.read_csv(list_path,encoding='latin1') 
             
             except Exception as e:
-                print(f"Failed to fetch remote file due to: {e}. Attempting to read from local file.")
+                print(f"Failed to fetch file due to: {e}. Attempting to read from another location.")
 
             '''user_selected_opt = user_list_options['Options'].loc[user_list_options['Variable']==row['Variable']].iloc[0]
             if user_selected_opt == '':
@@ -648,7 +653,9 @@ def getMultuListContent(current_datadicc,version,user_checked_options=None,ulist
     #datadiccDisease_lists = current_datadicc.loc[(((current_datadicc['Type']=='list') |(current_datadicc['Type']=='user_list') )&
     #                                            (current_datadicc['Variable'].isin(selected_variables)))]     
     datadiccDisease_lists = current_datadicc.loc[current_datadicc['Type']=='multi_list']         
-    root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+    # Use relative path instead of absolute path
+    # root='https://raw.githubusercontent.com/ISARICResearch/DataPlatform/main/ARCH/'
+    root='ARCH/'
     
     ulist_variable_choices=[]
     for _, row in datadiccDisease_lists.iterrows():
@@ -661,7 +668,7 @@ def getMultuListContent(current_datadicc,version,user_checked_options=None,ulist
                 list_options = pd.read_csv(list_path,encoding='latin1') 
             
             except Exception as e:
-                print(f"Failed to fetch remote file due to: {e}. Attempting to read from local file.")
+                print(f"Failed to fetch file due to: {e}. Attempting to read from another location.")
 
             '''user_selected_opt = user_list_options['Options'].loc[user_list_options['Variable']==row['Variable']].iloc[0]
             if user_selected_opt == '':
@@ -741,7 +748,7 @@ def getMultuListContent(current_datadicc,version,user_checked_options=None,ulist
             
             other_row['Variable'] = row['Sec'] +'_'+ row['vari']+'_'+'otherl3'
             other_row['Answer Options'] = None
-            other_row['Type'] = 'text'
+            other_row['Type']
             other_row['Maximum'] = None  
             other_row['Minimum'] = None  
             if row['Variable']!='inclu_disease':
@@ -762,6 +769,7 @@ def getMultuListContent(current_datadicc,version,user_checked_options=None,ulist
     arc_list = pd.DataFrame(all_rows_lists).reset_index(drop=True)
 
     return arc_list,ulist_variable_choices
+
 
 
 def generateDailyDataType(current_datadicc):

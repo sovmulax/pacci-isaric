@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  bridge-app:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bridge-app
+    ports:
+      - "8300:8300"
+    volumes:
+      - .:/app
+      - ./Outputs:/app/Outputs
+    environment:
+      - PYTHONUNBUFFERED=1
